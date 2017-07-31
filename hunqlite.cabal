@@ -9,18 +9,22 @@ author:              Sergey Skupoy
 maintainer:          sergey.skupoy@gmail.com
 copyright:           2017 Sergey Skupoy
 category:            Database
+extra-source-files:  unqlite/unqlite.c
+                   , unqlite/unqlite.h
 build-type:          Simple
-extra-source-files:  README.md
 cabal-version:       >=1.10
 
 library
   hs-source-dirs:      src
   exposed-modules:     Database.UnQLite
+                     , Database.UnQLite.Types
   build-depends:       base >= 4.7 && < 5
   default-language:    Haskell2010
-  Include-dirs:        unqlite
-  Includes:            unqlite.h
-  C-Sources:           unqlite/unqlite.c
+  include-dirs:        unqlite
+  includes:            unqlite.h
+  c-sources:           unqlite/unqlite.c
+  install-includes:    unqlite.h
+  cpp-options:         -fPIC
 
 test-suite hunqlite-test
   type:                exitcode-stdio-1.0
