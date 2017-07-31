@@ -1,6 +1,6 @@
 {-# LANGUAGE ForeignFunctionInterface #-}
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
-module UnQLite where
+module Database.UnQLite where
 
 import Foreign
 import Foreign.C.Types
