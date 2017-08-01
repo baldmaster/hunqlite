@@ -1,4 +1,5 @@
-import UnQLite
+import Database.UnQLite
+import Database.UnQLite.Types
 import Test.Hspec
 
 main :: IO ()
@@ -7,6 +8,6 @@ main = hspec $ do
     it "Should create db and store key-value" $ do
       connection <- openConnection "testdb"
       result <- kvStore connection "key" "value"
-      result `shouldBe` 0
+      decodeStatus result `shouldBe` StatusOK
       close  <- dbClose connection
-      close `shouldBe` 0
+      decodeStatus close `shouldBe` StatusOK

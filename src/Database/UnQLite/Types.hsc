@@ -1,9 +1,14 @@
+{-# LANGUAGE GeneralizedNewtypeDeriving #-}
 module Database.UnQLite.Types where
 
+import Foreign
+import Foreign.ForeignPtr
 import Foreign.C.Types
 
 #include "unqlite.h"
 
+
+-- Status codes
 data StatusCode = StatusOK               -- ^ Successful result
                 | StatusNoMem            -- ^ Out of memory
                 | StatusAbort            -- ^ Another thread have released this instance
@@ -28,7 +33,9 @@ data StatusCode = StatusOK               -- ^ Successful result
                 | StatusCantOpen         -- ^ to open the database file
                 | StatusReadOnly         -- ^ only Key/Value storage engine
                 | StatusLockError        -- ^ protocol error
+                deriving(Eq, Show)
 
+-- | C status code
 newtype CStatusCode = CStatusCode {unCStatusCode :: CInt}
   deriving (Show, Eq)
 
@@ -59,3 +66,10 @@ decodeStatus (CStatusCode n) = case n of
   #{const UNQLITE_CANTOPEN}       -> StatusCantOpen
   #{const UNQLITE_READ_ONLY}      -> StatusReadOnly
   #{const UNQLITE_LOCKERR}        -> StatusLockError
+
+-- | Unqlite handle
+newtype UnQLiteHandle = UnQLiteHandle (ForeignPtr ())
+
+-- | Unqlite pointer
+newtype UnQLite = UnQLite (Ptr ()) deriving Storable
+
