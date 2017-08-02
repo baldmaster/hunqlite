@@ -1,18 +1,22 @@
+{-# LANGUAGE OverloadedStrings #-}
+
 import Database.UnQLite
 import Database.UnQLite.Types
 import Foreign.C.Types
 import Foreign.C.String
 import Test.Hspec
 import Control.Exception
+import Data.Text
+import qualified Data.ByteString.Char8 as BS
 
-dbName = "testdb"
+dbName = pack "testdb"
 
 openConn :: IO UnQLiteHandle
-openConn = openConnection dbName
+openConn = open dbName
 
 closeConn :: UnQLiteHandle -> IO ()
 closeConn h = do
-  close <- dbClose h
+  status <- close h
   return ()
 
 withDatabaseConnection :: (UnQLiteHandle -> IO ()) -> IO ()
@@ -22,10 +26,10 @@ main :: IO ()
 main = hspec $ do
   describe "Connection" $ do
     it "Should be able to open and close db connection" $ do
-      connection <- openConnection dbName
+      connection <- open dbName
 
-      close  <- dbClose connection
-      decodeStatus close `shouldBe` StatusOK
+      status  <- close connection
+      decodeStatus status `shouldBe` StatusOK
 
   around withDatabaseConnection $ do
     describe "Store/append/fetch/delete" $ do
