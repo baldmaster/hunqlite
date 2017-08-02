@@ -73,3 +73,5 @@ newtype UnQLiteHandle = UnQLiteHandle (ForeignPtr ())
 -- | Unqlite pointer
 newtype UnQLite = UnQLite (Ptr ()) deriving Storable
 
+-- | Store helper
+data StoreHelper = Store | Append
