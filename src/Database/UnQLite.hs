@@ -19,11 +19,11 @@ newUnQLiteHandle h@(UnQLite p) = UnQLiteHandle `fmap` Conc.newForeignPtr p close
   where close = c_unqlite_close h >> return ()
 
 -- | Open connection
-open :: Text -> IO UnQLiteHandle
-open dbName =
+open :: Text -> CAccessMode -> IO UnQLiteHandle
+open dbName mode =
   alloca $ \ptr -> do
   status  <- useAsCString (encodeUtf8 dbName) $ \ c_dbName ->
-                c_unqlite_open ptr c_dbName (fromIntegral 4)
+                c_unqlite_open ptr c_dbName (unCAccessMode mode)
   case decodeStatus status of
     StatusOK -> do db <- peek ptr
                    newUnQLiteHandle db

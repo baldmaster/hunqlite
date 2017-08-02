@@ -12,7 +12,7 @@ import qualified Data.ByteString.Char8 as BS
 dbName = pack "testdb"
 
 openConn :: IO UnQLiteHandle
-openConn = open dbName
+openConn = open dbName createMode
 
 closeConn :: UnQLiteHandle -> IO ()
 closeConn h = do
@@ -26,7 +26,7 @@ main :: IO ()
 main = hspec $ do
   describe "Connection" $ do
     it "Should be able to open and close db connection" $ do
-      connection <- open dbName
+      connection <- open dbName createMode
 
       status  <- close connection
       decodeStatus status `shouldBe` StatusOK
