@@ -8,7 +8,7 @@ import Foreign.C.Types
 #include "unqlite.h"
 
 
--- Status codes
+-- | Status codes
 data StatusCode = StatusOK               -- ^ Successful result
                 | StatusNoMem            -- ^ Out of memory
                 | StatusAbort            -- ^ Another thread have released this instance
@@ -39,7 +39,7 @@ data StatusCode = StatusOK               -- ^ Successful result
 newtype CStatusCode = CStatusCode {unCStatusCode :: CInt}
   deriving (Show, Eq)
 
-
+-- | Decode status code
 decodeStatus :: CStatusCode -> StatusCode
 decodeStatus (CStatusCode n) = case n of
   #{const UNQLITE_OK}             -> StatusOK
@@ -75,3 +75,19 @@ newtype UnQLite = UnQLite (Ptr ()) deriving Storable
 
 -- | Store type
 data StoreType = Store | Append
+
+-- | DB access mode
+newtype CAccessMode = CAccessMode {unCAccessMode :: CUInt}
+  deriving (Show, Eq)
+
+-- | Main access modes
+#{enum CAccessMode, CAccessMode
+ , readOnlyMode  = UNQLITE_OPEN_READONLY
+ , readWriteMode = UNQLITE_OPEN_READWRITE
+ , createMode    = UNQLITE_OPEN_CREATE
+ , tempDBMode    = UNQLITE_OPEN_TEMP_DB
+ , noMutexMode   = UNQLITE_OPEN_NOMUTEX
+ , omitJournalingMode =  UNQLITE_OPEN_OMIT_JOURNALING
+ , inMemoryMode  = UNQLITE_OPEN_IN_MEMORY
+ , mmapMode      = UNQLITE_OPEN_MMAP
+ }
