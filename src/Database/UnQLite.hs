@@ -24,6 +24,7 @@ openConnection dbName =
                    newUnQLiteHandle db
     _ -> fail ("OPEN_DB: failed to open " ++ show st)
 
+-- TODO: calback fetching
 -- TODO: refactoring needed obviously
 fetchDinamically :: UnQLite -> Ptr CSize -> CString -> IO (Either String String)
 fetchDinamically u ptr ck = do
