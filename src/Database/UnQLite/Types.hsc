@@ -15,8 +15,8 @@ data StatusCode = StatusOK               -- ^ Successful result
                 | StatusIOError          -- ^ IO error
                 | StatusCorrupt          -- ^ Corrupt pointer
                 | StatusLocked           -- ^ Forbidden Operation
-                | StatusBusy	         -- ^ The database file is locked
-                | StatusDone	         -- ^ Operation done
+                | StatusBusy             -- ^ The database file is locked
+                | StatusDone             -- ^ Operation done
                 | StatusPermissionError  -- ^ Permission error
                 | StatusNotImplemented   -- ^ Method not implemented by the underlying Key/Value storage engine
                 | StatusNotFound         -- ^ No such record
@@ -73,5 +73,5 @@ newtype UnQLiteHandle = UnQLiteHandle (ForeignPtr ())
 -- | Unqlite pointer
 newtype UnQLite = UnQLite (Ptr ()) deriving Storable
 
--- | Store helper
-data StoreHelper = Store | Append
+-- | Store type
+data StoreType = Store | Append
