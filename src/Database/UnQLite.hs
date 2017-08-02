@@ -10,7 +10,6 @@ import Foreign.C.String
 import Foreign.ForeignPtr
 import qualified Foreign.Concurrent as Conc
 
-
 newUnQLiteHandle :: UnQLite -> IO UnQLiteHandle
 newUnQLiteHandle h@(UnQLite p) = UnQLiteHandle `fmap` Conc.newForeignPtr p close
   where close = c_unqlite_close h >> return ()
@@ -25,13 +24,42 @@ openConnection dbName =
                    newUnQLiteHandle db
     _ -> fail ("OPEN_DB: failed to open " ++ show st)
 
+-- TODO: calback fetching
+-- TODO: refactoring needed obviously
+fetchDinamically :: UnQLite -> Ptr CSize -> CString -> IO (Either String String)
+fetchDinamically u ptr ck = do
+  status <- c_unqlite_kv_fetch u ck (-1) nullPtr ptr
+  case decodeStatus status of
+    StatusOK -> do
+      (CSize len) <- peek ptr
+      allocaBytes (fromIntegral len) $
+        \vptr -> do
+          status <- c_unqlite_kv_fetch u ck (-1) (castPtr vptr :: Ptr CChar) ptr
+          case decodeStatus status of
+            StatusOK -> do
+              s <- peekCString vptr
+              return $ Right s
+            _ -> return $ Left ("get value: failed to fetch " ++ show status)
+    _ -> return $ Left ("Could not get length" ++ show status)
 
 kvStore (UnQLiteHandle h) k v = do
   ck <- newCString k
   cv <- newCString v
-  (_, len) <- newCStringLen v
-  withForeignPtr h (\p ->
-             c_unqlite_kv_store (UnQLite p) ck (-1) cv (fromIntegral len))
+  (lp, len) <- newCStringLen v
+  status <- withForeignPtr h
+    (\p -> c_unqlite_kv_store (UnQLite p) ck (-1) cv (fromIntegral len))
+  free ck
+  free cv
+  free lp
+  return status
+
+kvFetch (UnQLiteHandle h) k = do
+  ck <- newCString k
+  value <-  withForeignPtr h $
+            \p -> alloca $
+                  \ptr -> fetchDinamically (UnQLite p) ptr ck
+  free ck
+  return value
 
 dbClose (UnQLiteHandle h) = do
   withForeignPtr h (\p ->
