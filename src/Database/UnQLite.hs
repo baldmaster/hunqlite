@@ -39,19 +39,29 @@ fetchDinamically u ptr ck = do
             StatusOK -> do
               s <- peekCString vptr
               return $ Right s
-            _ -> return $ Left ("get value: failed to fetch " ++ show status)
-    _ -> return $ Left ("Could not get length" ++ show status)
+            _ -> return $ Left . show $ decodeStatus status
+    _ -> return $ Left . show $ decodeStatus status
 
-kvStore (UnQLiteHandle h) k v = do
+
+storeHelper h k v m = do
   ck <- newCString k
   cv <- newCString v
   (lp, len) <- newCStringLen v
   status <- withForeignPtr h
-    (\p -> c_unqlite_kv_store (UnQLite p) ck (-1) cv (fromIntegral len))
+    (\p -> method (UnQLite p) ck (-1) cv (fromIntegral len))
   free ck
   free cv
   free lp
   return status
+    where method = case m of
+            Store -> c_unqlite_kv_store
+            Append -> c_unqlite_kv_append
+
+kvStore (UnQLiteHandle h) k v = do
+  storeHelper h k v Store
+
+kvAppend (UnQLiteHandle h) k v = do
+  storeHelper h k v Append
 
 kvFetch (UnQLiteHandle h) k = do
   ck <- newCString k
@@ -60,6 +70,13 @@ kvFetch (UnQLiteHandle h) k = do
                   \ptr -> fetchDinamically (UnQLite p) ptr ck
   free ck
   return value
+
+kvDelete (UnQLiteHandle h) k = do
+  ck <- newCString k
+  status <- withForeignPtr h $
+    \p -> c_unqlite_kv_delete (UnQLite p) ck (-1)
+  free ck
+  return status
 
 dbClose (UnQLiteHandle h) = do
   withForeignPtr h (\p ->

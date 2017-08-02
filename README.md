@@ -10,8 +10,8 @@
 * [x] Store key\value
 * [x] Fetch key\value
 * [ ] DB init config
-* [ ] Append value
-* [ ] Delete key
+* [x] Append value
+* [x] Delete key
 * [ ] Formatted store\append
 * [ ] Callback fetching
 * [ ] Transactions begin\commit\rollback
