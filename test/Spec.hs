@@ -7,10 +7,10 @@ import Foreign.C.String
 import Test.Hspec
 import Control.Exception
 import Test.Hspec.Expectations
-import Data.Text
+import qualified Data.Text as T
 import qualified Data.ByteString.Char8 as BS
 
-dbName = pack "testdb"
+dbName = T.pack "testdb"
 
 openConn :: IO UnQLiteHandle
 openConn = openHandle dbName createMode
@@ -35,21 +35,29 @@ main = hspec $ do
   around withDatabaseConnection $ do
     describe "Store/append/fetch/delete" $ do
       it "Should successfully store key" $ \connection -> do
-        result <- kvStore connection "key" "value"
+        result <- store connection "key" "value"
         result `shouldBe` ()
-        return <- kvStore connection "newKey" "value"
+        return <- store connection "newKey" "value"
         result `shouldBe` ()
 
       it "Should successfully append key" $ \connection -> do
-        result <- kvAppend connection "newKey" "value"
+        result <- append connection "newKey" "value"
         result `shouldBe` ()
 
       it "Should successfully fetch data" $ \connection -> do
-        val <- kvFetch connection "key"
+        val <- fetch connection "key"
         val `shouldBe` "value"
-        val <- kvFetch connection "newKey"
+        val <- fetch connection "newKey"
         val `shouldBe` "valuevalue"
 
       it "Should successfully delete key" $ \connection -> do
-        kvDelete connection "key" `shouldReturn` ()
-        kvFetch connection "key" `shouldThrow` anyException
+        delete connection "key" `shouldReturn` ()
+        fetch connection "key" `shouldThrow` anyException
+
+    describe "Transactions" $ do
+      it "Should be possible to start and commit transcation" $
+        \connection -> do
+          begin connection `shouldReturn` ()
+          store connection "test" "test" `shouldReturn` ()
+          append connection "test" "test" `shouldReturn` ()
+          commit connection `shouldReturn` ()

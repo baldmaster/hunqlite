@@ -70,19 +70,19 @@ storeHelper h k v m = do
                         Append -> c_unqlite_kv_append
 
 
-kvStore
+store
   :: ForeignPtr ()
   -> ByteString
   -> ByteString
   -> IO (Either (StatusCode, Text) ())
-kvStore h k v = storeHelper h k v Store
+store h k v = storeHelper h k v Store
 
-kvAppend
+append
   :: ForeignPtr ()
   -> ByteString
   -> ByteString
   -> IO (Either (StatusCode, Text) ())
-kvAppend h k v = storeHelper h k v Append
+append h k v = storeHelper h k v Append
 
 
 fetchDinamically
@@ -105,16 +105,16 @@ fetchDinamically u ptr ck = do
               return . Right =<< packCString vptr
     _ -> return . Left $ (decodeStatus status, "Failed to get value size")
 
-kvFetch :: ForeignPtr () -> ByteString -> IO (Either  (StatusCode, Text) ByteString)
-kvFetch h k = do
+fetch :: ForeignPtr () -> ByteString -> IO (Either  (StatusCode, Text) ByteString)
+fetch h k = do
   useAsCString k $
     \ck ->
       withForeignPtr h $
         \p -> alloca $
               \ptr -> fetchDinamically (UnQLite p) ptr ck
 
-kvDelete :: ForeignPtr () -> ByteString -> IO (Either  (StatusCode, Text) ())
-kvDelete h k = do
+delete :: ForeignPtr () -> ByteString -> IO (Either  (StatusCode, Text) ())
+delete h k = do
   useAsCString k $
     \ck ->
       withForeignPtr h $
@@ -125,3 +125,40 @@ kvDelete h k = do
             return $ Left (err, "Delete operation failed")
           Right () ->
             return $ Right ()
+
+-- Transactions
+
+begin :: ForeignPtr () -> IO (Either  (StatusCode, Text) ())
+begin u = do
+  withForeignPtr u $
+    \p -> do
+      status <- c_unqlite_begin (UnQLite p)
+      case toResult () status of
+        Left err ->
+          return $ Left (err, "Failed to start transaction")
+        Right () ->
+          return $ Right ()
+
+
+commit :: ForeignPtr () -> IO (Either  (StatusCode, Text) ())
+commit u = do
+  withForeignPtr u $
+    \p -> do
+      status <- c_unqlite_commit (UnQLite p)
+      case toResult () status of
+        Left err ->
+          return $ Left (err, "Failed to commit transaction")
+        Right () ->
+          return $ Right ()
+
+
+rollback :: ForeignPtr () -> IO (Either  (StatusCode, Text) ())
+rollback u =
+  withForeignPtr u $
+    \p -> do
+      status <- c_unqlite_rollback (UnQLite p)
+      case toResult () status of
+        Left err ->
+          return $ Left (err, "Failed to rollback transaction")
+        Right () ->
+          return $ Right ()

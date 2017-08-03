@@ -23,4 +23,14 @@ foreign import ccall "unqlite.h unqlite_kv_fetch"
 foreign import ccall "unqlite.h unqlite_kv_delete"
      c_unqlite_kv_delete :: UnQLite -> CString -> CInt -> IO CStatusCode
 
+foreign import ccall "unqlite.h unqlite_begin"
+     c_unqlite_begin :: UnQLite -> IO CStatusCode
+
+foreign import ccall "unqlite.h unqlite_commit"
+     c_unqlite_commit :: UnQLite -> IO CStatusCode
+
+foreign import ccall "unqlite.h unqlite_rollback"
+     c_unqlite_rollback :: UnQLite -> IO CStatusCode
+
+
 foreign import ccall unsafe "stdlib.h &free" c_free_ptr :: FinalizerPtr a

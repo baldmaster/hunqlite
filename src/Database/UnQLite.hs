@@ -82,23 +82,38 @@ closeHandle (UnQLiteHandle h) = do
 
 -- | Write a new record into the database.
 -- If the record does not exists, it is created. Otherwise, it is replaced.
-kvStore :: UnQLiteHandle -> ByteString -> ByteString -> IO ()
-kvStore (UnQLiteHandle h) k v = do
-  Internal.kvStore h k v >>= checkError "store"
+store :: UnQLiteHandle -> ByteString -> ByteString -> IO ()
+store (UnQLiteHandle h) k v = do
+  Internal.store h k v >>= checkError "store"
 
 -- | Write a new record into the database.
 -- If the record does not exists, it is created.
 -- Otherwise, the new data chunk is appended to the end of the old chunk.
-kvAppend :: UnQLiteHandle -> ByteString -> ByteString -> IO ()
-kvAppend (UnQLiteHandle h) k v = do
-  Internal.kvAppend h k v >>= checkError "append"
+append :: UnQLiteHandle -> ByteString -> ByteString -> IO ()
+append (UnQLiteHandle h) k v = do
+  Internal.append h k v >>= checkError "append"
 
 -- | Fetch a record from the database.
-kvFetch :: UnQLiteHandle -> ByteString -> IO ByteString
-kvFetch (UnQLiteHandle h) k = do
-  Internal.kvFetch h k >>= checkError "fetch"
+fetch :: UnQLiteHandle -> ByteString -> IO ByteString
+fetch (UnQLiteHandle h) k = do
+  Internal.fetch h k >>= checkError "fetch"
 
 -- | Remove a record from the database.
-kvDelete :: UnQLiteHandle -> ByteString -> IO ()
-kvDelete (UnQLiteHandle h) k = do
-  Internal.kvDelete h k >>= checkError "delete"
+delete :: UnQLiteHandle -> ByteString -> IO ()
+delete (UnQLiteHandle h) k = do
+  Internal.delete h k >>= checkError "delete"
+
+-- | Begin Transaction
+begin :: UnQLiteHandle -> IO ()
+begin (UnQLiteHandle h)= do
+  Internal.begin h >>= checkError "begin"
+
+-- | Commit transaction
+commit :: UnQLiteHandle -> IO ()
+commit (UnQLiteHandle h)= do
+  Internal.commit h >>= checkError "commit"
+
+-- | Rollback transaction
+rollback :: UnQLiteHandle -> IO ()
+rollback (UnQLiteHandle h)= do
+  Internal.rollback h >>= checkError "rollback"
