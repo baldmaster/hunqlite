@@ -15,13 +15,13 @@ High priority
 * [x] DB init config (access modes)
 * [x] Append value
 * [x] Delete key
-* [ ] Transactions begin\commit\rollback
+* [x] Transactions begin\commit\rollback
 * [ ] Cursor interface
 * [ ] Document Store (JSON via Jx9). A very complex and very promising feature.
 
 Low priority
 
 * [ ] Configure the underlying Key/Value (KV) storage engine.
-* [ ] DB config (a database handle obtained by a prior successful call to unqlite_open())
+* [x] DB config (config database handle obtained by a prior successful call to unqlite_open())
 * [ ] Formatted store\append
 * [ ] Callback fetching
