@@ -94,9 +94,13 @@ append (UnQLiteHandle h) k v = do
   Internal.append h k v >>= checkError "append"
 
 -- | Fetch a record from the database.
-fetch :: UnQLiteHandle -> ByteString -> IO ByteString
+fetch :: UnQLiteHandle -> ByteString -> IO (Maybe ByteString)
 fetch (UnQLiteHandle h) k = do
-  Internal.fetch h k >>= checkError "fetch"
+  value <- Internal.fetch h k
+  case value of
+    Left (StatusNotFound, _) -> return Nothing
+    Left (err, msg) -> throwUnQLiteError err msg "fetch"
+    Right v -> return $ Just v
 
 -- | Remove a record from the database.
 delete :: UnQLiteHandle -> ByteString -> IO ()
@@ -117,3 +121,8 @@ commit (UnQLiteHandle h)= do
 rollback :: UnQLiteHandle -> IO ()
 rollback (UnQLiteHandle h)= do
   Internal.rollback h >>= checkError "rollback"
+
+-- | Disable auto commit
+disableAC :: UnQLiteHandle -> IO ()
+disableAC (UnQLiteHandle h) = do
+  Internal.disableAC h >>= checkError "disable autocommit"

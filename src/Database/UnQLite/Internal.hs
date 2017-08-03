@@ -162,3 +162,15 @@ rollback u =
           return $ Left (err, "Failed to rollback transaction")
         Right () ->
           return $ Right ()
+
+-- Config
+disableAC :: ForeignPtr () -> IO (Either (StatusCode, Text) ())
+disableAC u =
+  withForeignPtr u $
+  \p -> do
+    status <- c_unqlite_config_0 (UnQLite p) disableAutoCommit
+    case toResult () status of
+      Left err ->
+        return $ Left (err, "Failed to disable autocommit")
+      Right () ->
+        return $ Right ()

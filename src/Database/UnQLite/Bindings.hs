@@ -32,5 +32,19 @@ foreign import ccall "unqlite.h unqlite_commit"
 foreign import ccall "unqlite.h unqlite_rollback"
      c_unqlite_rollback :: UnQLite -> IO CStatusCode
 
+-- Maybe there's better solution to handle variadic functions...
+-- Two args config
+foreign import ccall "unqlite.h unqlite_config"
+     c_unqlite_config_2 :: UnQLite -> CConfigOption -> Ptr CString -> Ptr CInt -> IO CStatusCode
+
+-- One arg config
+foreign import ccall "unqlite.h unqlite_config"
+     c_unqlite_config_1 :: UnQLite -> CConfigOption -> Ptr CString -> IO CStatusCode
+
+-- No arg config
+foreign import ccall "unqlite.h unqlite_config"
+     c_unqlite_config_0 :: UnQLite -> CConfigOption -> IO CStatusCode
+
+
 
 foreign import ccall unsafe "stdlib.h &free" c_free_ptr :: FinalizerPtr a

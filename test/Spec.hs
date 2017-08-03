@@ -46,18 +46,25 @@ main = hspec $ do
 
       it "Should successfully fetch data" $ \connection -> do
         val <- fetch connection "key"
-        val `shouldBe` "value"
+        val `shouldBe` (Just "value")
         val <- fetch connection "newKey"
-        val `shouldBe` "valuevalue"
+        val `shouldBe` (Just "valuevalue")
 
       it "Should successfully delete key" $ \connection -> do
         delete connection "key" `shouldReturn` ()
-        fetch connection "key" `shouldThrow` anyException
+        val <- fetch connection "key"
+        val `shouldBe` Nothing
 
     describe "Transactions" $ do
       it "Should be possible to start and commit transcation" $
         \connection -> do
+          disableAC connection `shouldReturn` ()
           begin connection `shouldReturn` ()
-          store connection "test" "test" `shouldReturn` ()
-          append connection "test" "test" `shouldReturn` ()
+          store connection "testAC" "test" `shouldReturn` ()
+          append connection "testAC" "test" `shouldReturn` ()
           commit connection `shouldReturn` ()
+
+      it "DB should contain commited value" $
+        \connection -> do
+          val <- fetch connection "testAC"
+          val `shouldBe` (Just "testtest")
