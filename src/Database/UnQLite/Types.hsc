@@ -71,13 +71,13 @@ decodeStatus (CStatusCode n) = case n of
 newtype UnQLiteHandle = UnQLiteHandle (ForeignPtr ())
 
 -- | Unqlite pointer
-newtype UnQLite = UnQLite (Ptr ()) deriving Storable
+newtype UnQLite = UnQLite (Ptr ()) deriving (Storable, Eq)
 
 -- | Store type
 data StoreType = Store | Append
 
 -- | DB access mode
-newtype CAccessMode = CAccessMode {unCAccessMode :: CUInt}
+newtype CAccessMode = CAccessMode {getAccessMode :: CUInt}
   deriving (Show, Eq)
 
 -- | Main access modes
@@ -90,4 +90,19 @@ newtype CAccessMode = CAccessMode {unCAccessMode :: CUInt}
  , omitJournalingMode =  UNQLITE_OPEN_OMIT_JOURNALING
  , inMemoryMode  = UNQLITE_OPEN_IN_MEMORY
  , mmapMode      = UNQLITE_OPEN_MMAP
+ }
+
+-- | DB config option
+newtype CConfigOption = CConfigOption {getConfigOption :: CInt}
+  deriving (Show, Eq)
+
+-- | Config options to configure database handle.
+-- <https://unqlite.org/c_api/unqlite_config.html>
+#{enum CConfigOption, CConfigOption
+ , jx9ErrorLog = UNQLITE_CONFIG_JX9_ERR_LOG
+ , maxPageCache = UNQLITE_CONFIG_MAX_PAGE_CACHE
+ , errorLog = UNQLITE_CONFIG_ERR_LOG
+ , kvEngine = UNQLITE_CONFIG_KV_ENGINE
+ , disableAutoCommit = UNQLITE_CONFIG_DISABLE_AUTO_COMMIT
+ , kvName = UNQLITE_CONFIG_GET_KV_NAME
  }
