@@ -19,6 +19,7 @@ library
   exposed-modules:     Database.UnQLite
                      , Database.UnQLite.Types
                      , Database.UnQLite.Bindings
+                     , Database.UnQLite.Internal
   build-depends:       base >= 4.7 && < 5
                      , text
                      , bytestring
@@ -37,6 +38,7 @@ test-suite hunqlite-test
                      , bytestring
                      , text
                      , hspec
+                     , hspec-expectations
                      , hunqlite
   ghc-options:         -threaded -rtsopts -with-rtsopts=-N
   default-language:    Haskell2010

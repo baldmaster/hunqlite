@@ -71,13 +71,13 @@ decodeStatus (CStatusCode n) = case n of
 newtype UnQLiteHandle = UnQLiteHandle (ForeignPtr ())
 
 -- | Unqlite pointer
-newtype UnQLite = UnQLite (Ptr ()) deriving Storable
+newtype UnQLite = UnQLite (Ptr ()) deriving (Storable, Eq)
 
 -- | Store type
 data StoreType = Store | Append
 
 -- | DB access mode
-newtype CAccessMode = CAccessMode {unCAccessMode :: CUInt}
+newtype CAccessMode = CAccessMode {getAccessMode :: CUInt}
   deriving (Show, Eq)
 
 -- | Main access modes
