@@ -1,8 +1,10 @@
 {-# LANGUAGE ForeignFunctionInterface #-}
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
+{-# LANGUAGE OverloadedStrings #-}
 module Database.UnQLite where
 import Database.UnQLite.Bindings
 import Database.UnQLite.Types
+import qualified Database.UnQLite.Internal as Internal
 
 import Foreign
 import Foreign.C.Types
@@ -12,84 +14,115 @@ import Data.ByteString
 import qualified Data.Text as T
 import Data.Text.Encoding
 import Data.Text (Text)
+import Control.Exception
+import Data.Typeable
 import qualified Foreign.Concurrent as Conc
+
+-- | UnQLite error
+data UnQLiteError = UnQLiteError
+    { errorCode      :: !StatusCode
+        -- ^ Error code returned by API call
+    , errorMessage   :: Text
+        -- ^ Text describing the error
+    , errorContext   :: Text
+        -- ^ Indicates action that caused the error
+    }
+    deriving (Eq, Typeable)
+
+
+instance Show UnQLiteError where
+    show UnQLiteError { errorCode   = code
+                      , errorMessage = message
+                      , errorContext = context
+                      }
+      = T.unpack $ T.concat
+         [ "UnQLite returned "
+         , T.pack $ show code
+         , " while attempting to perform "
+         , context
+         , ": "
+         , message
+         ]
+
+instance Exception UnQLiteError
+
+throwUnQLiteError :: StatusCode -> Text -> Text -> IO a
+throwUnQLiteError code message context = do
+    throwIO UnQLiteError
+        { errorCode        = code
+        , errorMessage     = message
+        , errorContext     = context
+        }
+
+checkError :: Text -> Either (StatusCode, Text) a -> IO a
+checkError context result = case result of
+    Left (err, msg) -> throwUnQLiteError err msg context
+    Right a         -> return a
+
 
 newUnQLiteHandle :: UnQLite -> IO UnQLiteHandle
 newUnQLiteHandle h@(UnQLite p) = UnQLiteHandle `fmap` Conc.newForeignPtr p close
   where close = c_unqlite_close h >> return ()
 
 -- | Open connection
-open :: Text -> CAccessMode -> IO UnQLiteHandle
+open :: Text -> CAccessMode -> IO UnQLite
 open dbName mode =
-  alloca $ \ptr -> do
-  status  <- useAsCString (encodeUtf8 dbName) $ \ c_dbName ->
-                c_unqlite_open ptr c_dbName (unCAccessMode mode)
-  case decodeStatus status of
-    StatusOK -> do db <- peek ptr
-                   newUnQLiteHandle db
-    _ -> fail (show status)
+  Internal.open dbName mode >>= checkError "open"
+
+openHandle :: Text -> CAccessMode -> IO UnQLiteHandle
+openHandle dbName mode =
+  open dbName mode >>= newUnQLiteHandle
 
 -- | Close connection
-close (UnQLiteHandle h) = do
-  withForeignPtr h (\p ->
-             c_unqlite_close (UnQLite p))
+close conn = Internal.close conn >>= checkError "close"
 
-
-fetchDinamically :: UnQLite -> Ptr CSize -> CString -> IO (Either String ByteString)
-fetchDinamically u ptr ck = do
-  status <- c_unqlite_kv_fetch u ck (-1) nullPtr ptr
-  case decodeStatus status of
-    StatusOK -> do
-      (CSize len) <- peek ptr
-      allocaBytes (fromIntegral len) $
-        \vptr -> do
-          status <- c_unqlite_kv_fetch u ck (-1) vptr ptr
-          case decodeStatus status of
-            StatusOK -> do
-              return . Right =<< packCString vptr
-            _ -> return . Left . show $ decodeStatus status
-    _ -> return . Left . show $ decodeStatus status
-
-
-storeHelper :: ForeignPtr () -> ByteString -> ByteString -> StoreType -> IO CStatusCode
-storeHelper h k v m = do
-  useAsCString k $
-    \ck -> do
-      useAsCStringLen v $
-        \ (cv, len) ->
-          withForeignPtr h $
-            \p -> method (UnQLite p) ck (-1) cv (fromIntegral len)
-            where method = case m of
-                    Store -> c_unqlite_kv_store
-                    Append -> c_unqlite_kv_append
-
+-- | Close handle
+closeHandle (UnQLiteHandle h) = do
+  withForeignPtr h $ \p -> close (UnQLite p)
 
 -- | Write a new record into the database.
 -- If the record does not exists, it is created. Otherwise, it is replaced.
-kvStore :: UnQLiteHandle -> ByteString -> ByteString -> IO CStatusCode
-kvStore (UnQLiteHandle h) k v = do
-  storeHelper h k v Store
+store :: UnQLiteHandle -> ByteString -> ByteString -> IO ()
+store (UnQLiteHandle h) k v = do
+  Internal.store h k v >>= checkError "store"
 
 -- | Write a new record into the database.
 -- If the record does not exists, it is created.
 -- Otherwise, the new data chunk is appended to the end of the old chunk.
-kvAppend :: UnQLiteHandle -> ByteString -> ByteString -> IO CStatusCode
-kvAppend (UnQLiteHandle h) k v = do
-  storeHelper h k v Append
+append :: UnQLiteHandle -> ByteString -> ByteString -> IO ()
+append (UnQLiteHandle h) k v = do
+  Internal.append h k v >>= checkError "append"
 
 -- | Fetch a record from the database.
-kvFetch :: UnQLiteHandle -> ByteString -> IO (Either String ByteString)
-kvFetch (UnQLiteHandle h) k = do
-  useAsCString k $
-    \ck ->
-      withForeignPtr h $
-        \p -> alloca $
-              \ptr -> fetchDinamically (UnQLite p) ptr ck
+fetch :: UnQLiteHandle -> ByteString -> IO (Maybe ByteString)
+fetch (UnQLiteHandle h) k = do
+  value <- Internal.fetch h k
+  case value of
+    Left (StatusNotFound, _) -> return Nothing
+    Left (err, msg) -> throwUnQLiteError err msg "fetch"
+    Right v -> return $ Just v
 
 -- | Remove a record from the database.
-kvDelete :: UnQLiteHandle -> ByteString -> IO CStatusCode
-kvDelete (UnQLiteHandle h) k = do
-  useAsCString k $
-    \ck ->
-      withForeignPtr h $
-      \p -> c_unqlite_kv_delete (UnQLite p) ck (-1)
+delete :: UnQLiteHandle -> ByteString -> IO ()
+delete (UnQLiteHandle h) k = do
+  Internal.delete h k >>= checkError "delete"
+
+-- | Begin Transaction
+begin :: UnQLiteHandle -> IO ()
+begin (UnQLiteHandle h)= do
+  Internal.begin h >>= checkError "begin"
+
+-- | Commit transaction
+commit :: UnQLiteHandle -> IO ()
+commit (UnQLiteHandle h)= do
+  Internal.commit h >>= checkError "commit"
+
+-- | Rollback transaction
+rollback :: UnQLiteHandle -> IO ()
+rollback (UnQLiteHandle h)= do
+  Internal.rollback h >>= checkError "rollback"
+
+-- | Disable auto commit
+disableAC :: UnQLiteHandle -> IO ()
+disableAC (UnQLiteHandle h) = do
+  Internal.disableAC h >>= checkError "disable autocommit"
