@@ -4,6 +4,7 @@ module Database.UnQLite.Types where
 import Foreign
 import Foreign.ForeignPtr
 import Foreign.C.Types
+import Foreign.C.String
 
 #include "unqlite.h"
 
@@ -99,10 +100,43 @@ newtype CConfigOption = CConfigOption {getConfigOption :: CInt}
 -- | Config options to configure database handle.
 -- <https://unqlite.org/c_api/unqlite_config.html>
 #{enum CConfigOption, CConfigOption
- , jx9ErrorLog = UNQLITE_CONFIG_JX9_ERR_LOG
- , maxPageCache = UNQLITE_CONFIG_MAX_PAGE_CACHE
- , errorLog = UNQLITE_CONFIG_ERR_LOG
- , kvEngine = UNQLITE_CONFIG_KV_ENGINE
+ , jx9ErrorLog       = UNQLITE_CONFIG_JX9_ERR_LOG
+ , maxPageCache      = UNQLITE_CONFIG_MAX_PAGE_CACHE
+ , errorLog          = UNQLITE_CONFIG_ERR_LOG
+ , kvEngine          = UNQLITE_CONFIG_KV_ENGINE
  , disableAutoCommit = UNQLITE_CONFIG_DISABLE_AUTO_COMMIT
- , kvName = UNQLITE_CONFIG_GET_KV_NAME
+ , kvName            = UNQLITE_CONFIG_GET_KV_NAME
  }
+
+-- | VM config option
+newtype CVMConfigOption = CVMConfigOption {getVMOption :: CInt}
+  deriving (Show, Eq)
+
+-- | VM options.
+-- <https://unqlite.org/c_api/unqlite_vm_config.html>
+#{enum CVMConfigOption, CVMConfigOption
+ , vmOutput           = UNQLITE_VM_CONFIG_OUTPUT
+ , vmImportPath       = UNQLITE_VM_CONFIG_IMPORT_PATH
+ , vmErrorReport      = UNQLITE_VM_CONFIG_ERR_REPORT
+ , vmRecursionDepth   = UNQLITE_VM_CONFIG_RECURSION_DEPTH
+ , vmOutputLength     = UNQLITE_VM_OUTPUT_LENGTH
+ , vmCreateVar        = UNQLITE_VM_CONFIG_CREATE_VAR
+ , vmHTTPRequest      = UNQLITE_VM_CONFIG_HTTP_REQUEST
+ , vmServerAttributes = UNQLITE_VM_CONFIG_SERVER_ATTR
+ , vmENVAttributes    = UNQLITE_VM_CONFIG_ENV_ATTR
+ , vmExecValue        = UNQLITE_VM_CONFIG_EXEC_VALUE
+ , vmIOStream         = UNQLITE_VM_CONFIG_IO_STREAM
+ , vmARGVEntry        = UNQLITE_VM_CONFIG_ARGV_ENTRY
+ , vmExtractOutput    = UNQLITE_VM_CONFIG_EXTRACT_OUTPUT
+ }
+
+-- | VM pointer
+newtype VMp = VMp (Ptr ())
+  deriving (Storable, Eq, Show)
+
+-- | UnQLIte value
+newtype UnQLiteValue = UnQLiteValue (Ptr ())
+  deriving (Storable, Eq)
+
+-- | Jx9Script type
+type Jx9Script = CString

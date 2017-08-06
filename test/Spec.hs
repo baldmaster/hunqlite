@@ -23,6 +23,16 @@ closeConn h = do
 withDatabaseConnection :: (UnQLiteHandle -> IO ()) -> IO ()
 withDatabaseConnection = bracket openConn closeConn
 
+testScript =
+  "db_create('users'); /* Create the collection users */\
+  \ /* Store something */ \
+  \ db_store('users',{ 'name' : 'dean' , 'age' : 32 });\
+  \ db_store('users',{ 'name' : 'chems' , 'age' : 27 });"
+
+isVM m = case m of
+  (VMp _) -> True
+  _       -> False
+
 main :: IO ()
 main = hspec $ do
   describe "Connection" $ do
@@ -68,3 +78,9 @@ main = hspec $ do
         \connection -> do
           val <- fetch connection "testAC"
           val `shouldBe` (Just "testtest")
+
+    describe "Compile" $ do
+      it "Should complile and execute Jx9 script" $ \connection -> do
+        vm <- compile connection testScript
+        vm `shouldSatisfy` isVM
+        exec vm `shouldReturn` ()

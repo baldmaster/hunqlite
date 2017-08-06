@@ -174,3 +174,27 @@ disableAC u =
         return $ Left (err, "Failed to disable autocommit")
       Right () ->
         return $ Right ()
+
+-- | Jx9 related functions
+compile :: ForeignPtr () -> ByteString -> IO (Either (StatusCode, Text) VMp)
+compile u s =
+  withForeignPtr u $
+  \p ->
+    useAsCStringLen s $
+    \(cs, len) ->
+      alloca $ \ptr -> do
+      status <- c_unqlite_compile (UnQLite p) cs (fromIntegral len) ptr
+      case toResult () status of
+        Left err ->
+          return $ Left (err, "Compilation failed")
+        Right () ->
+          Right <$> peek ptr
+
+exec :: VMp -> IO (Either (StatusCode, Text) ())
+exec vm =  do
+  status <- c_unqlite_vm_exec vm
+  case toResult () status of
+    Left err ->
+      return $ Left (err, "Execution failed")
+    _        ->
+      return $ Right ()
