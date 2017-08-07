@@ -6,6 +6,7 @@ import Foreign.C.Types
 import Foreign.C.String
 import Test.Hspec
 import Control.Exception
+import System.Directory
 import Test.Hspec.Expectations
 import qualified Data.Text as T
 import qualified Data.ByteString.Char8 as BS
@@ -13,18 +14,40 @@ import qualified Data.ByteString.Char8 as BS
 dbName = T.pack "testdb"
 
 openConn :: IO UnQLiteHandle
-openConn = openHandle dbName createMode
+openConn = do
+  openHandle dbName createMode
 
 closeConn :: UnQLiteHandle -> IO ()
 closeConn h = do
   status <- closeHandle h
   return ()
 
+dropDB = do
+  let f = T.unpack dbName
+  exists <- doesFileExist f
+  if exists then
+    removeFile f
+  else return ()
+
 withDatabaseConnection :: (UnQLiteHandle -> IO ()) -> IO ()
 withDatabaseConnection = bracket openConn closeConn
 
+testScript =
+  "db_create('users'); /* Create the collection users */\
+  \ /* Store something */ \
+  \ db_store('users',{ 'name' : 'dean' , 'age' : 32 });\
+  \ db_store('users',{ 'name' : 'chems' , 'age' : 27 });\
+  \ print 'test';"
+
+malformedScript =
+  "db_create('u"
+
+isVM m = case m of
+  (VMp _) -> True
+  _       -> False
+
 main :: IO ()
-main = hspec $ do
+main = hspec $ beforeAll_ dropDB $ afterAll_ dropDB $ do
   describe "Connection" $ do
     it "Should be able to open and close db connection" $ do
       connection <- open dbName createMode >>= newUnQLiteHandle
@@ -68,3 +91,25 @@ main = hspec $ do
         \connection -> do
           val <- fetch connection "testAC"
           val `shouldBe` (Just "testtest")
+
+  before openConn $ after closeConn $ do
+    describe "VM" $ do
+      it "Should complile and execute Jx9 script" $ \connection -> do
+        vm <- compile connection testScript
+        vm `shouldSatisfy` isVM
+        exec vm `shouldReturn` ()
+        output <- extractOutput vm
+        output `shouldBe` "test"
+        reset vm `shouldReturn` ()
+        exec vm `shouldReturn` ()
+
+      it "Should throw on malformed script" $ \connection -> do
+        res <- try $ compile connection malformedScript :: IO (Either UnQLiteError VMp)
+        res `shouldSatisfy` (\k -> case k of
+                                Left err -> True
+                                Right _ -> False)
+
+      it "Should throw when trying to use released VM" $ \connection -> do
+        vm <- compile connection testScript
+        release vm `shouldReturn` ()
+        exec vm `shouldThrow` anyException

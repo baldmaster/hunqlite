@@ -8,9 +8,10 @@ import Foreign
 import Foreign.C.Types
 import Foreign.C.String
 import Database.UnQLite.Types
-import Data.ByteString
+import Data.ByteString as B
 import Data.Text (Text)
 import Data.Text.Encoding
+import Data.Word
 import Control.Applicative  ((<$>))
 
 type Result a = Either StatusCode a
@@ -174,3 +175,63 @@ disableAC u =
         return $ Left (err, "Failed to disable autocommit")
       Right () ->
         return $ Right ()
+
+-- | Jx9 related functions
+compile :: ForeignPtr () -> ByteString -> IO (Either (StatusCode, Text) VMp)
+compile u s =
+  withForeignPtr u $
+  \p ->
+    useAsCStringLen s $
+    \(cs, len) ->
+      alloca $ \ptr -> do
+      status <- c_unqlite_compile (UnQLite p) cs (fromIntegral len) ptr
+      case toResult () status of
+        Left err ->
+          return $ Left (err, "Compilation failed")
+        Right () ->
+          Right <$> peek ptr
+
+exec :: VMp -> IO (Either (StatusCode, Text) ())
+exec vm =  do
+  status <- c_unqlite_vm_exec vm
+  case toResult () status of
+    Left err ->
+      return $ Left (err, "Execution failed")
+    _        ->
+      return $ Right ()
+
+reset :: VMp -> IO (Either (StatusCode, Text) ())
+reset vm =  do
+  status <- c_unqlite_vm_reset vm
+  case toResult () status of
+    Left err ->
+      return $ Left (err, "VM reset failed")
+    _        ->
+      return $ Right ()
+
+
+release :: VMp -> IO (Either (StatusCode, Text) ())
+release vm =  do
+  status <- c_unqlite_vm_release vm
+  case toResult () status of
+    Left err ->
+      return $ Left (err, "VM release failed")
+    _        ->
+      return $ Right ()
+
+extractOutput :: VMp -> IO (Either (StatusCode, Text) ByteString)
+extractOutput vm = do
+  alloca $
+    \buff ->
+      alloca $
+      \s -> do
+        status <- c_unqlite_vm_config_extract_output
+                  vm vmExtractOutput buff s
+        case toResult () status of
+          Left err ->
+            return $ Left (err, "Failed to extract output")
+          _ -> do
+            l <- peek s
+            str <- peek buff
+            result <- B.packCStringLen (str, fromIntegral l)
+            return $ Right result

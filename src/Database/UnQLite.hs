@@ -126,3 +126,29 @@ rollback (UnQLiteHandle h)= do
 disableAC :: UnQLiteHandle -> IO ()
 disableAC (UnQLiteHandle h) = do
   Internal.disableAC h >>= checkError "disable autocommit"
+
+-- | Compile Jx9 script
+compile :: UnQLiteHandle -> ByteString -> IO VMp
+compile (UnQLiteHandle h) s =
+  Internal.compile h s >>= checkError "compile"
+
+-- | Exec script
+exec :: VMp -> IO ()
+exec vm =
+  Internal.exec vm >>= checkError "exec"
+
+-- | Reset VM
+reset :: VMp -> IO ()
+reset vm =
+  Internal.reset vm >>= checkError "reset"
+
+
+-- | Release VM
+release :: VMp -> IO ()
+release vm =
+  Internal.release vm >>= checkError "release"
+
+-- | Extract VM output
+extractOutput :: VMp -> IO ByteString
+extractOutput vm =
+  Internal.extractOutput vm >>= checkError "extract output"
