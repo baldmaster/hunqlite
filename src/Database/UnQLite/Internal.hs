@@ -191,6 +191,7 @@ compile u s =
         Right () ->
           Right <$> peek ptr
 
+
 exec :: VMp -> IO (Either (StatusCode, Text) ())
 exec vm =  do
   status <- c_unqlite_vm_exec vm

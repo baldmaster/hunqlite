@@ -10,11 +10,13 @@ import Foreign
 import Foreign.C.Types
 import Foreign.C.String
 import Foreign.ForeignPtr
-import Data.ByteString
+import qualified Data.ByteString as B
+import Data.ByteString (ByteString)
 import qualified Data.Text as T
 import Data.Text.Encoding
 import Data.Text (Text)
 import Control.Exception
+import System.Directory
 import Data.Typeable
 import qualified Foreign.Concurrent as Conc
 
@@ -127,10 +129,23 @@ disableAC :: UnQLiteHandle -> IO ()
 disableAC (UnQLiteHandle h) = do
   Internal.disableAC h >>= checkError "disable autocommit"
 
--- | Compile Jx9 script
+-- | Compile Jx9 script string
 compile :: UnQLiteHandle -> ByteString -> IO VMp
 compile (UnQLiteHandle h) s =
   Internal.compile h s >>= checkError "compile"
+
+-- | Compile Jx9 file
+compileFile :: UnQLiteHandle -> FilePath -> IO (Maybe VMp)
+compileFile (UnQLiteHandle h) path = do
+  exists <- doesFileExist path
+  if exists
+    then
+      B.readFile path
+      >>= Internal.compile h
+      >>= checkError "compile file"
+      >>= return . Just
+    else
+      return Nothing
 
 -- | Exec script
 exec :: VMp -> IO ()
@@ -141,7 +156,6 @@ exec vm =
 reset :: VMp -> IO ()
 reset vm =
   Internal.reset vm >>= checkError "reset"
-
 
 -- | Release VM
 release :: VMp -> IO ()

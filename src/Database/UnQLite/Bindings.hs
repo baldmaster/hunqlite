@@ -49,6 +49,10 @@ foreign import ccall "unqlite.h unqlite_config"
 foreign import ccall "unqlite.h unqlite_compile"
      c_unqlite_compile  :: UnQLite -> Jx9Script -> CInt -> Ptr VMp -> IO CStatusCode
 
+-- | <https://unqlite.org/c_api/unqlite_compile_file.html>
+foreign import ccall "unqlite.h unqlite_compile_file"
+     c_unqlite_compile_file  :: UnQLite -> CString -> Ptr VMp -> IO CStatusCode
+
 -- | <https://unqlite.org/c_api/unqlite_value_alloc.html>
 foreign import ccall "unqlite.h unqlite_vm_new_scalar"
      c_unqlite_vm_new_scalar :: VMp -> IO UnQLiteValue
