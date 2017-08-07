@@ -18,14 +18,16 @@ High priority
 * [x] Transactions begin\commit\rollback
 * [ ] Cursor interface
 * [ ] Document Store (JSON via Jx9). A very complex and very promising feature.
-  * [ ] Compile stringified script
+  * [x] Compile stringified script
   * [ ] Compile Jx9 file
   * [ ] Config VM
   * [ ] Consumer callback
   * [ ] Release VM
   * [ ] Extract variable
   * [ ] Pass variables and objects to precompiled script
-  * [ ] Exec script
+  * [x] Get VM output
+  * [x] Reset VM
+  * [x] Exec script
 
 Low priority
 
