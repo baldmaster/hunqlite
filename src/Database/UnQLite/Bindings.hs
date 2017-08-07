@@ -45,6 +45,42 @@ foreign import ccall "unqlite.h unqlite_config"
 foreign import ccall "unqlite.h unqlite_config"
      c_unqlite_config_0 :: UnQLite -> CConfigOption -> IO CStatusCode
 
+-- | <https://unqlite.org/c_api/unqlite_compile.html>
+foreign import ccall "unqlite.h unqlite_compile"
+     c_unqlite_compile  :: UnQLite -> Jx9Script -> CInt -> Ptr VMp -> IO CStatusCode
+
+-- | <https://unqlite.org/c_api/unqlite_value_alloc.html>
+foreign import ccall "unqlite.h unqlite_vm_new_scalar"
+     c_unqlite_vm_new_scalar :: VMp -> IO UnQLiteValue
+
+foreign import ccall "unqlite.h unqlite_vm_new_array"
+     c_unqlite_vm_new_array :: VMp -> IO UnQLiteValue
+
+foreign import ccall "unqlite.h unqlite_vm_release_value"
+     c_unqlite_vm_release_value :: VMp -> UnQLiteValue -> IO CStatusCode
+
+-- | <https://unqlite.org/c_api/unqlite_vm_config.html>
+foreign import ccall "unqlite.h unqlite_vm_config"
+     c_unqlite_vm_config_create_var :: VMp -> CVMConfigOption -> CString -> UnQLiteValue -> IO CStatusCode
+
+foreign import ccall "unqlite.h unqlite_vm_config"
+     c_unqlite_vm_config_extract_output :: VMp -> CVMConfigOption -> Ptr CString -> Ptr CUInt -> IO CStatusCode
+
+-- | <https://unqlite.org/c_api/unqlite_vm_exec.html>
+foreign import ccall "unqlite.h unqlite_vm_exec"
+     c_unqlite_vm_exec :: VMp -> IO CStatusCode
+
+-- | <https://unqlite.org/c_api/unqlite_vm_reset.html>
+foreign import ccall "unqlite.h unqlite_vm_reset"
+     c_unqlite_vm_reset :: VMp -> IO CStatusCode
+
+-- | <https://unqlite.org/c_api/unqlite_vm_release.html>
+foreign import ccall "unqlite.h unqlite_vm_release"
+     c_unqlite_vm_release :: VMp -> IO CStatusCode
+
+-- | <https://unqlite.org/c_api/unqlite_vm_extract_variable.html>
+foreign import ccall "unqlite.h unqlite_vm_extract_variable"
+     c_unqlite_vm_extract_variable :: VMp -> CString -> IO UnQLiteValue
 
 
 foreign import ccall unsafe "stdlib.h &free" c_free_ptr :: FinalizerPtr a
