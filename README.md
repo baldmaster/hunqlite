@@ -22,7 +22,7 @@ High priority
   * [ ] Compile Jx9 file
   * [ ] Config VM
   * [ ] Consumer callback
-  * [ ] Release VM
+  * [x] Release VM
   * [ ] Extract variable
   * [ ] Pass variables and objects to precompiled script
   * [x] Get VM output

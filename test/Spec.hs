@@ -108,3 +108,8 @@ main = hspec $ beforeAll_ dropDB $ afterAll_ dropDB $ do
         res `shouldSatisfy` (\k -> case k of
                                 Left err -> True
                                 Right _ -> False)
+
+      it "Should throw when trying to use released VM" $ \connection -> do
+        vm <- compile connection testScript
+        release vm `shouldReturn` ()
+        exec vm `shouldThrow` anyException

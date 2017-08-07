@@ -11,6 +11,7 @@ import Database.UnQLite.Types
 import Data.ByteString as B
 import Data.Text (Text)
 import Data.Text.Encoding
+import Data.Word
 import Control.Applicative  ((<$>))
 
 type Result a = Either StatusCode a
@@ -208,6 +209,15 @@ reset vm =  do
     _        ->
       return $ Right ()
 
+
+release :: VMp -> IO (Either (StatusCode, Text) ())
+release vm =  do
+  status <- c_unqlite_vm_release vm
+  case toResult () status of
+    Left err ->
+      return $ Left (err, "VM release failed")
+    _        ->
+      return $ Right ()
 
 extractOutput :: VMp -> IO (Either (StatusCode, Text) ByteString)
 extractOutput vm = do

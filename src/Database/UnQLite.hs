@@ -142,6 +142,12 @@ reset :: VMp -> IO ()
 reset vm =
   Internal.reset vm >>= checkError "reset"
 
+
+-- | Release VM
+release :: VMp -> IO ()
+release vm =
+  Internal.release vm >>= checkError "release"
+
 -- | Extract VM output
 extractOutput :: VMp -> IO ByteString
 extractOutput vm =
