@@ -8,7 +8,7 @@ import Foreign
 import Foreign.C.Types
 import Foreign.C.String
 import Database.UnQLite.Types
-import Data.ByteString
+import Data.ByteString as B
 import Data.Text (Text)
 import Data.Text.Encoding
 import Control.Applicative  ((<$>))
@@ -198,3 +198,30 @@ exec vm =  do
       return $ Left (err, "Execution failed")
     _        ->
       return $ Right ()
+
+reset :: VMp -> IO (Either (StatusCode, Text) ())
+reset vm =  do
+  status <- c_unqlite_vm_reset vm
+  case toResult () status of
+    Left err ->
+      return $ Left (err, "VM reset failed")
+    _        ->
+      return $ Right ()
+
+
+extractOutput :: VMp -> IO (Either (StatusCode, Text) ByteString)
+extractOutput vm = do
+  alloca $
+    \buff ->
+      alloca $
+      \s -> do
+        status <- c_unqlite_vm_config_extract_output
+                  vm vmExtractOutput buff s
+        case toResult () status of
+          Left err ->
+            return $ Left (err, "Failed to extract output")
+          _ -> do
+            l <- peek s
+            str <- peek buff
+            result <- B.packCStringLen (str, fromIntegral l)
+            return $ Right result

@@ -63,6 +63,9 @@ foreign import ccall "unqlite.h unqlite_vm_release_value"
 foreign import ccall "unqlite.h unqlite_vm_config"
      c_unqlite_vm_config_create_var :: VMp -> CVMConfigOption -> CString -> UnQLiteValue -> IO CStatusCode
 
+foreign import ccall "unqlite.h unqlite_vm_config"
+     c_unqlite_vm_config_extract_output :: VMp -> CVMConfigOption -> Ptr CString -> Ptr CUInt -> IO CStatusCode
+
 -- | <https://unqlite.org/c_api/unqlite_vm_exec.html>
 foreign import ccall "unqlite.h unqlite_vm_exec"
      c_unqlite_vm_exec :: VMp -> IO CStatusCode

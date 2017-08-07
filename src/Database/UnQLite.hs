@@ -132,6 +132,17 @@ compile :: UnQLiteHandle -> ByteString -> IO VMp
 compile (UnQLiteHandle h) s =
   Internal.compile h s >>= checkError "compile"
 
+-- | Exec script
 exec :: VMp -> IO ()
 exec vm =
   Internal.exec vm >>= checkError "exec"
+
+-- | Reset VM
+reset :: VMp -> IO ()
+reset vm =
+  Internal.reset vm >>= checkError "reset"
+
+-- | Extract VM output
+extractOutput :: VMp -> IO ByteString
+extractOutput vm =
+  Internal.extractOutput vm >>= checkError "extract output"
