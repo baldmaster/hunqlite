@@ -6,6 +6,8 @@
 
 ## TODO:
 
+* [ ] Jx9 EDSL
+
 High priority
 
 * [x] Open DB connection
@@ -21,14 +23,14 @@ High priority
   * [x] Compile stringified script
   * [x] Compile Jx9 file
   * [ ] Config VM
-  * [ ] Consumer callback
+    * [x] Extract output
+    * [ ] Consumer callback
   * [x] Release VM
   * [ ] Extract variable
   * [ ] Pass variables and objects to precompiled script
   * [x] Get VM output
   * [x] Reset VM
   * [x] Exec script
-* [ ] Jx9 EDSL
 
 Low priority
 

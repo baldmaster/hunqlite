@@ -236,3 +236,16 @@ extractOutput vm = do
             str <- peek buff
             result <- B.packCStringLen (str, fromIntegral l)
             return $ Right result
+
+setConsumer
+  :: VMp
+  -> (Ptr () -> CUInt -> Ptr () -> IO CStatusCode)
+  -> IO (Either (StatusCode, Text) ())
+setConsumer vm consumer = do
+  fn <- c_wrap consumer
+  status <- c_unqlite_vm_config_config_output vm vmOutput fn nullPtr
+  case toResult () status of
+    Left err ->
+      return $ Left (err, "Consumer setting error")
+    Right _ ->
+      return $ Right ()
