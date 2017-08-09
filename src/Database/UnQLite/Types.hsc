@@ -68,6 +68,34 @@ decodeStatus (CStatusCode n) = case n of
   #{const UNQLITE_READ_ONLY}      -> StatusReadOnly
   #{const UNQLITE_LOCKERR}        -> StatusLockError
 
+encodeStatus :: StatusCode -> CStatusCode
+encodeStatus s = CStatusCode $ case s of
+  StatusOK               -> #const UNQLITE_OK
+  StatusNoMem            -> #const UNQLITE_NOMEM
+  StatusAbort            -> #const UNQLITE_ABORT
+  StatusIOError          -> #const UNQLITE_IOERR
+  StatusCorrupt          -> #const UNQLITE_CORRUPT
+  StatusLocked           -> #const UNQLITE_LOCKED
+  StatusBusy             -> #const UNQLITE_BUSY
+  StatusDone             -> #const UNQLITE_DONE
+  StatusPermissionError  -> #const UNQLITE_PERM
+  StatusNotImplemented   -> #const UNQLITE_NOTIMPLEMENTED
+  StatusNotFound         -> #const UNQLITE_NOTFOUND
+  StatusNoop             -> #const UNQLITE_NOOP
+  StatusInvalid          -> #const UNQLITE_INVALID
+  StatusEOF              -> #const UNQLITE_EOF
+  StatusUnknown          -> #const UNQLITE_UNKNOWN
+  StatusLimit            -> #const UNQLITE_LIMIT
+  StatusExists           -> #const UNQLITE_EXISTS
+  StatusEmpty            -> #const UNQLITE_EMPTY
+  StatusCompilerError    -> #const UNQLITE_COMPILE_ERR
+  StatusVMError          -> #const UNQLITE_VM_ERR
+  StatusFull             -> #const UNQLITE_FULL
+  StatusCantOpen         -> #const UNQLITE_CANTOPEN
+  StatusReadOnly         -> #const UNQLITE_READ_ONLY
+  StatusLockError        -> #const UNQLITE_LOCKERR
+
+
 -- | Unqlite handle
 newtype UnQLiteHandle = UnQLiteHandle (ForeignPtr ())
 

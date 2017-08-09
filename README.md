@@ -6,6 +6,8 @@
 
 ## TODO:
 
+* [ ] Jx9 EDSL
+
 High priority
 
 * [x] Open DB connection
@@ -19,9 +21,10 @@ High priority
 * [ ] Cursor interface
 * [ ] Document Store (JSON via Jx9). A very complex and very promising feature.
   * [x] Compile stringified script
-  * [ ] Compile Jx9 file
+  * [x] Compile Jx9 file
   * [ ] Config VM
-  * [ ] Consumer callback
+    * [x] Extract output
+    * [ ] Consumer callback
   * [x] Release VM
   * [ ] Extract variable
   * [ ] Pass variables and objects to precompiled script

@@ -2,14 +2,19 @@
 
 import Database.UnQLite
 import Database.UnQLite.Types
+import Database.UnQLite.Internal (setConsumer)
 import Foreign.C.Types
 import Foreign.C.String
+import Foreign.Ptr
 import Test.Hspec
 import Control.Exception
 import System.Directory
+import Data.Either (isRight)
+import Data.Maybe (isJust, fromJust)
 import Test.Hspec.Expectations
 import qualified Data.Text as T
 import qualified Data.ByteString.Char8 as BS
+import qualified Data.ByteString as B
 
 dbName = T.pack "testdb"
 
@@ -31,6 +36,20 @@ dropDB = do
 
 withDatabaseConnection :: (UnQLiteHandle -> IO ()) -> IO ()
 withDatabaseConnection = bracket openConn closeConn
+
+testFileName = "test.jx9"
+scriptData   = "print 'testing file compile';"
+
+createScript = BS.writeFile testFileName scriptData
+
+deleteScript = removeFile testFileName
+
+consumer buff len _ = do
+  s <- B.packCStringLen (castPtr buff, fromIntegral len)
+  B.putStrLn "GOT DATA: "
+  B.putStrLn s
+  return (encodeStatus StatusOK)
+
 
 testScript =
   "db_create('users'); /* Create the collection users */\
@@ -113,3 +132,27 @@ main = hspec $ beforeAll_ dropDB $ afterAll_ dropDB $ do
         vm <- compile connection testScript
         release vm `shouldReturn` ()
         exec vm `shouldThrow` anyException
+
+      it "Should return Nothing when trying to compile non existent file" $ \connection -> do
+        vm <- compileFile connection "unexistentfile.jx9"
+        vm `shouldBe` Nothing
+
+      it "Should successfully compile file" $ \connection -> do
+        createScript
+        vm <- compileFile connection testFileName
+        vm `shouldSatisfy` isJust
+        deleteScript
+        let vm' = fromJust vm
+        exec vm' `shouldReturn` ()
+        output <- extractOutput vm'
+        output `shouldBe` "testing file compile"
+
+      it "Should set consumer callback" $ \connection -> do
+        createScript
+        vm <- compileFile connection testFileName
+        vm `shouldSatisfy` isJust
+        deleteScript
+        let vm' = fromJust vm
+        status <- setConsumer vm' consumer
+        status `shouldSatisfy` isRight
+        exec vm' `shouldReturn` ()
