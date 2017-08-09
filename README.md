@@ -19,7 +19,7 @@ High priority
 * [ ] Cursor interface
 * [ ] Document Store (JSON via Jx9). A very complex and very promising feature.
   * [x] Compile stringified script
-  * [ ] Compile Jx9 file
+  * [x] Compile Jx9 file
   * [ ] Config VM
   * [ ] Consumer callback
   * [x] Release VM
@@ -28,6 +28,7 @@ High priority
   * [x] Get VM output
   * [x] Reset VM
   * [x] Exec script
+* [ ] Jx9 EDSL
 
 Low priority
 
